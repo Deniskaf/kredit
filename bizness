@@ -1,0 +1,155 @@
+#include <iostream>
+#include <vector>
+using namespace std;
+namespace InvestmentCalculator {
+
+    class InvestmentReturnCalculator {
+    private:
+        double depositAmount;
+        int placementPeriod;
+        double interestRate;
+        double taxRate;
+        int paymentFrequency;
+        bool interestCapitalization;
+        vector<double> replenishments;
+        vector<double> partialWithdrawals;
+
+    public:
+        InvestmentReturnCalculator(double depositAmount, int placementPeriod, double interestRate, double taxRate,
+            int paymentFrequency, bool interestCapitalization, vector<double> replenishments,
+            vector<double> partialWithdrawals) {
+            this->depositAmount = depositAmount;
+            this->placementPeriod = placementPeriod;
+            this->interestRate = interestRate;
+            this->taxRate = taxRate;
+            this->paymentFrequency = paymentFrequency;
+            this->interestCapitalization = interestCapitalization;
+            this->replenishments = replenishments;
+            this->partialWithdrawals = partialWithdrawals;
+        }
+
+        double CalculateAccruedInterest() {
+            double accruedInterest = 0.0;
+            double currentAmount = depositAmount;
+
+            for (int i = 0; i < placementPeriod; i++) {
+                double annualInterest = currentAmount * interestRate;
+                double taxAmount = annualInterest * taxRate;
+                double netInterest = annualInterest - taxAmount;
+
+                accruedInterest += netInterest;
+
+                if (interestCapitalization) {
+                    currentAmount += netInterest;
+                }
+
+                for (double replenishment : replenishments) {
+                    currentAmount += replenishment;
+                }
+
+                for (double withdrawal : partialWithdrawals) {
+                    currentAmount -= withdrawal;
+                }
+            }
+
+            return accruedInterest;
+        }
+
+        double CalculateTaxAmount() {
+            double accruedInterest = CalculateAccruedInterest();
+            double taxAmount = accruedInterest * taxRate;
+
+            return taxAmount;
+        }
+
+        double CalculateAmountOnDeposit() {
+            double amountOnDeposit = depositAmount;
+            double currentAmount = depositAmount;
+
+            for (int i = 0; i < placementPeriod; i++) {
+                double annualInterest = currentAmount * interestRate;
+                double taxAmount = annualInterest * taxRate;
+                double netInterest = annualInterest - taxAmount;
+
+                amountOnDeposit += netInterest;
+
+                if (interestCapitalization) {
+                    currentAmount += netInterest;
+                }
+
+                for (double replenishment : replenishments) {
+                    currentAmount += replenishment;
+                }
+
+                for (double withdrawal : partialWithdrawals) {
+                    currentAmount -= withdrawal;
+                }
+            }
+
+            return amountOnDeposit;
+        }
+    };
+}
+
+int main() {
+    double depositAmount;
+    int placementPeriod;
+    double interestRate;
+    double taxRate;
+    int paymentFrequency;
+    bool interestCapitalization;
+    vector<double> replenishments;
+    vector<double> partialWithdrawals;
+    setlocale(LC_ALL, "Russian");
+
+    // Ввод данных с клавиатуры
+    cout << "Введите начальную сумму депозита: ";
+    cin >> depositAmount;
+
+    cout << "Введите срок размещения в годах: ";
+    cin >> placementPeriod;
+
+    cout << "Введите годовую процентную ставку (в виде десятичной дроби, например, 0.05 для 5%): ";
+    cin >> interestRate;
+
+    cout << "Введите ставку налога (в виде десятичной дроби, например, 0.1 для 10%): ";
+    cin >> taxRate;
+
+    cout << "Введите частоту выплат в год: ";
+    cin >> paymentFrequency;
+
+    cout << "Введите флаг капитализации процентов (1 для капитализации, 0 для отсутствия капитализации): ";
+    cin >> interestCapitalization;
+
+    int replenishmentCount;
+    cout << "Введите количество пополнений: ";
+    cin >> replenishmentCount;
+    replenishments.resize(replenishmentCount);
+    for (int i = 0; i < replenishmentCount; i++) {
+        cout << "Введите сумму пополнения " << i + 1 << ": ";
+        cin >> replenishments[i];
+    }
+
+    int withdrawalCount;
+    cout << "Введите количество частичных снятий: ";
+    cin >> withdrawalCount;
+    partialWithdrawals.resize(withdrawalCount);
+    for (int i = 0; i < withdrawalCount; i++) {
+        cout << "Введите сумму частичного снятия " << i + 1 << ": ";
+        cin >> partialWithdrawals[i];
+    }
+
+    InvestmentCalculator::InvestmentReturnCalculator calculator(depositAmount, placementPeriod, interestRate,
+        taxRate, paymentFrequency, interestCapitalization, replenishments, partialWithdrawals);
+
+    double accruedInterest = calculator.CalculateAccruedInterest();
+    double taxAmount = calculator.CalculateTaxAmount();
+    double amountOnDeposit = calculator.CalculateAmountOnDeposit();
+
+    // Вывод результатов на экран
+    cout << "Начисленные проценты: " << accruedInterest <<endl;
+    cout << "Сумма налога: " << taxAmount << endl;
+    cout << "Сумма на депозите: " << amountOnDeposit <<endl;
+
+    return 0;
+}
