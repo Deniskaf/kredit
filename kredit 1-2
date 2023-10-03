@@ -1,0 +1,116 @@
+#include <iostream>
+#include <cmath>
+#include <stdexcept>
+
+using namespace std;
+namespace LoanCalculator{
+
+    /**
+    * class Loan
+    * Представляет собой кредит с указанной суммой, сроком, процентной ставкой и типом.
+    */
+    class Loan {
+    private:
+        double loanAmount;
+        int term;
+        double interestRate;
+        int type; 
+
+    public:
+        /**
+        * Конструирует объект Loan с указанными деталями кредита.
+        *
+        * amount Общая сумма кредита.
+        * term Срок кредита в месяцах.
+        * rate Годовая процентная ставка.
+        * loanType Выбор типа кредита (1 - аннуитет, 2 - дифференцированный).
+        * invalid_argument если сумма кредита, срок или процентная ставка отрицательны или равны нулю,
+        *         или если выбран недопустимый тип кредита.
+        */
+        Loan(double amount, int term, double rate, int loanType) {
+            if (amount <= 0 || term <= 0 || rate <= 0) {
+                throw invalid_argument("Сумма кредита, срок и процентная ставка должны быть положительными.");
+            }
+
+            if (loanType != 1 && loanType != 2) {
+                throw invalid_argument("Выберите тип кредита (1 - аннуитет, 2 - дифференцированный).");
+            }
+
+            loanAmount = amount;
+            this->term = term;
+            interestRate = rate;
+            type = loanType;
+        }
+
+       
+        double CalculateMonthlyPayment() {
+            double monthlyInterestRate = interestRate / 100 / 12;
+            double monthlyPayment = 0.0;
+
+            if (type == 1) { // Аннуитетный кредит
+                monthlyPayment = (loanAmount * monthlyInterestRate) /
+                    (1 - std::pow(1 + monthlyInterestRate, -term));
+            }
+            else if (type == 2) { // Дифференцированный кредит
+                double totalPayment = 0.0;
+                for (int i = 1; i <= term; i++) {
+                    double differentiatedPayment = loanAmount / term +
+                        (loanAmount - (loanAmount * (i - 1)) / term) * monthlyInterestRate;
+                    totalPayment += differentiatedPayment;
+                }
+                monthlyPayment = totalPayment / term;
+            }
+
+            return monthlyPayment;
+        }
+
+       
+        double CalculateTotalPayment() {
+            return CalculateMonthlyPayment() * term;
+        }
+
+       
+        double CalculateLoanOverpayment() {
+            return CalculateTotalPayment() - loanAmount;
+        }
+    };
+}
+
+int main() {
+    double loanAmount;
+    int term;
+    double interestRate;
+    int loanType; 
+
+    setlocale(LC_ALL, "Russian");
+
+    // ввод от пользователя
+    cout << "Введите общую сумму кредита: ";
+    cin >> loanAmount;
+
+    cout << "Введите срок кредита в месяцах: ";
+    cin >> term;
+
+    cout << "Введите годовую процентную ставку: ";
+    cin >> interestRate;
+
+    cout << "Выберите тип кредита (1 - аннуитет, 2 - дифференцированный): ";
+    cin >> loanType;
+
+    try {
+        LoanCalculator::Loan loan(loanAmount, term, interestRate, loanType);
+
+        double monthlyPayment = loan.CalculateMonthlyPayment();
+        double totalPayment = loan.CalculateTotalPayment();
+        double loanOverpayment = loan.CalculateLoanOverpayment();
+
+        cout << "Ежемесячный платеж: " << monthlyPayment << endl;
+        cout << "Переплата по кредиту: " << loanOverpayment << endl;
+        cout << "Общая сумма платежей: " << totalPayment << endl;
+    }
+    catch (const invalid_argument& e) {
+        cerr << "Неверный ввод: " << e.what() << endl;
+    }
+
+    return 0;
+}
